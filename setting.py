@@ -1,0 +1,2 @@
+SCREEN_W = 600
+SCREEN_H = 600
