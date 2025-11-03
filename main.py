@@ -22,7 +22,7 @@ class Game:
 
         #create player
         self.all_sprites = pygame.sprite.Group()
-        self.player = Player((300, 300), self.all_sprites)
+        self.player = Player((300, 500), self.all_sprites)
         
 
         self.circles = pygame.sprite.Group()
@@ -72,7 +72,7 @@ class Game:
             #spawn circle
             current_time = time.time()
             if current_time - self.last_circle_spawn > self.circle_spawn_interval and self.player.alive:
-                random_x = random.randint(190, 420)
+                random_x = random.randint(150, 460)
                 self.circle = Objects((random_x, 0))
                 self.all_sprites.add(self.circle)
                 self.last_circle_spawn = current_time

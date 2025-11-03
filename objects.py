@@ -1,7 +1,7 @@
 import pygame
 
 class Objects(pygame.sprite.Sprite):
-    def __init__(self, pos, radius=20, color=(255, 0, 0), speed=125):
+    def __init__(self, pos, radius=20, color=(0, 255, 0), speed=125):
         super().__init__()
         self.radius = radius
         self.color = color
