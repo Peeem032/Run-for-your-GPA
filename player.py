@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.grounded_y = pos[1]  #y position (ground)
         self.alive = True  #is alive
 
-        # Screen boundaries (adjust based on your player size)
+        # Screen boundaries
         self.min_x = 150 #left boundary
         self.max_x = 460  #right boundary
 
