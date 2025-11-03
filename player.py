@@ -13,32 +13,38 @@ class Player(pygame.sprite.Sprite):
         # Get rect and set position
         self.rect = self.image.get_rect(center=pos)
 
-        # Lanes x positions
-        self.lanes_x = [190, 305, 420]
-        self.current_lane = 1  # start middle
-        self.move_speed = 400  # speed
+         # Free movement settings
+        self.move_speed = 300  #horizontal movement speed
+        self.velocity_x = 0  #current horizontal velocity
 
-        self.grounded_y = pos[1]  # y position (ground)
-        self.alive = True  # is alive
+        self.grounded_y = pos[1]  #y position (ground)
+        self.alive = True  #is alive
 
-    # Handle key press
+        # Screen boundaries (adjust based on your player size)
+        self.min_x = 150 #left boundary
+        self.max_x = 460  #right boundary
+
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RIGHT and self.current_lane < len(self.lanes_x) - 1:
-                self.current_lane += 1  # move right
-            elif event.key == pygame.K_LEFT and self.current_lane > 0:
-                self.current_lane -= 1  # move left
+            if event.key == pygame.K_RIGHT:
+                self.velocity_x = self.move_speed  #move right
+            elif event.key == pygame.K_LEFT:
+                self.velocity_x = -self.move_speed  #move left
+        
+        elif event.type == pygame.KEYUP:
+            if event.key in (pygame.K_RIGHT, pygame.K_LEFT):
+                self.velocity_x = 0  #stop moving
 
     # Update player position
     def update(self, dt):
         if not self.alive:
-            return  # stop if dead
+            return  #stop if dead
 
-        # Move to target lane
-        target_x = self.lanes_x[self.current_lane]
-        dx = target_x - self.rect.centerx
+        # Move horizontally based on velocity
+        self.rect.centerx += self.velocity_x * dt
 
-        if abs(dx) < 5:
-            self.rect.centerx = target_x  # snap to lane
-        else:
-            self.rect.centerx += self.move_speed * dt * (1 if dx > 0 else -1)  # move smoothly
+        # Keep player within screen boundaries
+        if self.rect.centerx < self.min_x:
+            self.rect.centerx = self.min_x
+        elif self.rect.centerx > self.max_x:
+            self.rect.centerx = self.max_x
