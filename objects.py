@@ -12,4 +12,7 @@ class Objects(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.rect.y += self.speed * dt
+        # Remove circle if it goes off screen
+        if self.rect.top > 600:
+            self.kill()
         

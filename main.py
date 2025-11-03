@@ -1,3 +1,4 @@
+from typing import Any
 import pygame, sys
 import time
 import random
@@ -65,9 +66,7 @@ class Game:
                 #send event to player
                 self.player.handle_event(event)
 
-            #update all sprites
-            self.all_sprites.update(dt)
-            self.circles.update(dt)
+            
 
             #spawn circle
             current_time = time.time()
@@ -75,7 +74,18 @@ class Game:
                 random_x = random.randint(150, 460)
                 self.circle = Objects((random_x, 0))
                 self.all_sprites.add(self.circle)
+                self.circles.add(self.circle)
                 self.last_circle_spawn = current_time
+
+            #update all sprites
+            self.all_sprites.update(dt)
+            self.circles.update(dt)
+
+            
+            #check for collisions between player and circles
+            if self.player.alive:
+                collisions = pygame.sprite.spritecollide(self.player, self.circles, True)
+                # The True parameter (dokill) automatically removes colliding circles from all groups
 
             #draw background
             self.display_surface.fill("white")
@@ -92,7 +102,11 @@ class Game:
                 self.display_surface.blit(End_text, (200, 200))
                 self.player.alive = False
                 
-            
+                
+                for circle in list(self.circles):
+                    circle.kill()
+
+                
 
             #draw player
             self.all_sprites.draw(self.display_surface)
