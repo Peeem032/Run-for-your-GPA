@@ -26,7 +26,7 @@ RED = (255, 50, 50)
 DARK_RED = (150, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 220, 0)
-
+BLACK = (0,0,0)
 # --- INIT WINDOW ---
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Run for Your GPA - 3D Road")
@@ -68,6 +68,7 @@ spawn_timer = 60
 score = 0
 health = 100  # Player’s HP (health bar)
 font = pygame.font.Font(None, 36)
+GOfont = pygame.font.SysFont("Arial",60,pygame.font.Font.bold)
 running = True
 
 # --- MAIN GAME LOOP ---
@@ -144,19 +145,23 @@ while running:
     player.draw(screen)
 
     # --- DRAW SCORE ---
-    score_text = font.render(f"Score: {score}", True, WHITE)
+    score_text = font.render(f"Score: {score}", True, BLACK)
     screen.blit(score_text, (20, 20))
+    
 
     # --- DRAW HEALTH BAR ---
+    healthPos = 22
+    health_text = font.render("Health : ",True,WHITE)
+    screen.blit(health_text,(200,healthPos-2))
     bar_x, bar_y, bar_w, bar_h = 20, 60, 200, 20
-    pygame.draw.rect(screen, DARK_RED, (bar_x, bar_y, bar_w, bar_h))  # Empty bar
-    pygame.draw.rect(screen, GREEN, (bar_x, bar_y, int(bar_w * (health / 100)), bar_h))  # Filled bar
-    pygame.draw.rect(screen, WHITE, (bar_x, bar_y, bar_w, bar_h), 2)  # Border
+    pygame.draw.rect(screen, DARK_RED, (300,healthPos,bar_w, bar_h))  # Empty bar
+    pygame.draw.rect(screen, GREEN, (300, healthPos, int(bar_w * (health / 100)), bar_h))  # Filled bar
+    pygame.draw.rect(screen, WHITE, (300, healthPos, bar_w, bar_h), 2)  # Border
 
     # --- GAME OVER CHECK ---
     if health <= 0:
-        game_over_text = font.render("GAME OVER", True, RED)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
+        game_over_text = GOfont.render("GAME OVER", True, RED)
+        screen.blit(game_over_text, ((SCREEN_WIDTH//2)-150 , (SCREEN_HEIGHT//2)-50))
         pygame.display.flip()
         pygame.time.wait(2000)
         running = False
