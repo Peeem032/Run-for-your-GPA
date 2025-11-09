@@ -21,7 +21,6 @@ ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON
 
 # --- COLORS ---
 SKY_BLUE = (135, 206, 235)
-GRASS_GREEN = (60, 179, 113)
 RED = (255, 50, 50)
 DARK_RED = (150, 0, 0)
 WHITE = (255, 255, 255)
@@ -32,18 +31,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Run for Your GPA - 3D Road")
 clock = pygame.time.Clock()
 
-# --- LOAD TMX MAP AS ROAD TEXTURE ---
-# This creates a long road background image from a Tiled .tmx file
-tmx_data = pytmx.util_pygame.load_pygame("Map/new_map_2.tmx")
-tile_w, tile_h = tmx_data.tilewidth, tmx_data.tileheight
-map_w, map_h = tmx_data.width * tile_w, tmx_data.height * tile_h
 
-road_texture = pygame.Surface((map_w, map_h), pygame.SRCALPHA)
-for y in range(tmx_data.height):
-    for x in range(tmx_data.width):
-        img = tmx_data.get_tile_image(x, y, 0)
-        if img:
-            road_texture.blit(img, (x * tile_w, y * tile_h))
+road_texture = pygame.image.load("assets/st_road.png").convert_alpha()
+map_w, map_h = road_texture.get_size()
 
 # --- LOAD PLAYER ---
 player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
@@ -85,26 +75,30 @@ while running:
     player.move(keys, dt)
 
     # --- SCROLLING ROAD ---
-    scroll -= SCROLL_SPEED
+    scroll = (scroll - SCROLL_SPEED) % map_h
     if scroll < 0:
         scroll = map_h
 
     # --- DRAW SKY AND GRASS ---
     screen.fill(SKY_BLUE)
-    pygame.draw.rect(screen, GRASS_GREEN, (0, HORIZON, SCREEN_WIDTH, SCREEN_HEIGHT - HORIZON))
+    bg_img = pygame.image.load("assets/bg.png").convert_alpha()
+    sky_img = pygame.image.load("assets/sky.png").convert_alpha()
+    screen.blit(sky_img, (0, 0))
+    screen.blit(bg_img, (0, 0))
+    
 
     # --- DRAW PERSPECTIVE ROAD ---
-    road_view = pygame.Surface((SCREEN_WIDTH, ROAD_HEIGHT), pygame.SRCALPHA)
-    for y in range(ROAD_HEIGHT):
-        map_y = int((map_h - (scroll + (y / ROAD_HEIGHT) * map_h)) % map_h)
+    road_view = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT // 2), pygame.SRCALPHA)
+    for y in range(SCREEN_HEIGHT // 2):
+        map_y = int(((scroll + (y / (SCREEN_HEIGHT // 2)) * map_h)) % map_h)
         src_line = road_texture.subsurface((0, map_y, map_w, 1))
-        scale = y / ROAD_HEIGHT
-        line_width = ROAD_WIDTH_TOP + (ROAD_WIDTH_BOTTOM - ROAD_WIDTH_TOP) * scale
+        scale = y / (SCREEN_HEIGHT // 2)
+        line_width = 80 + (380 * scale)
         x_pos = SCREEN_WIDTH / 2 - line_width
         dest_width = int(line_width * 2)
         scaled_line = pygame.transform.scale(src_line, (dest_width, 2))
         road_view.blit(scaled_line, (x_pos, y))
-    screen.blit(road_view, (0, HORIZON))
+    screen.blit(road_view, (0, SCREEN_HEIGHT // 2))
 
     # --- ROAD BOUNDARIES ---
     # Keep the player inside the visible road area
