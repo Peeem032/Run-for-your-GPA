@@ -126,7 +126,7 @@ def run_game():
     spawn_timer = 60
     score = 0
     health = 100
-    game_time = 20.0
+    game_time = 60.0
     multi = 1
     buff_timer = 0.0
 
@@ -185,7 +185,7 @@ def run_game():
         for o in pygame.sprite.spritecollide(player, obstacles, True):
             score -= 1
             health -= 15
-
+        buff_timer = max(0.0, buff_timer - dt)
         collectibles.draw(screen)
         obstacles.draw(screen)
         player.draw(screen)
@@ -193,14 +193,16 @@ def run_game():
         score_text = font.render(f"Score: {score}", True, BLACK)
         screen.blit(score_text, (20, 20))
 
-        time_text = font.render(f"Time: {int(game_time)}", True, BLACK)
+        time_text = font.render(f"Time Left: {int(game_time)}", True, BLACK)
         screen.blit(time_text, (600, 20))
 
         if multi > 1:
             screen.blit(border_img,(SCREEN_WIDTH//2-140, 67))
             buff_text = ThaiFont.render("เข้าเดือน!!!", True, RED)
+            buff_count = scoreFont.render(f"Buff : {int(buff_timer)}",True, RED)
 
             screen.blit(buff_text, (SCREEN_WIDTH//2-120, 60))
+            screen.blit(buff_count,(SCREEN_WIDTH//2-75, 175))
             pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
 
         health_pos = 27
