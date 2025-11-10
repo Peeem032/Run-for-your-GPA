@@ -15,7 +15,7 @@ SCROLL_SPEED = 5
 # Perspective road width
 ROAD_WIDTH_BOTTOM = SCREEN_WIDTH * 0.7
 ROAD_WIDTH_TOP = SCREEN_WIDTH * 0.05
-HORIZON = SCREEN_HEIGHT // 2 - 30
+HORIZON = SCREEN_HEIGHT // 2 - 32
 ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON
 
 # --- COLORS ---
@@ -40,13 +40,15 @@ bg_img = pygame.image.load("assets/bg.png").convert_alpha()
 play_button_img = pygame.image.load("assets/start_button.png").convert_alpha()
 gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
 timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
+border_img = pygame.image.load("assets/border.png").convert_alpha()
 
 coin_img = pygame.image.load("assets/coin.png").convert_alpha()
 book_img = pygame.image.load("assets/book.png").convert_alpha()
 cone_img = pygame.image.load("assets/cone.png").convert_alpha()
 rock_img = pygame.image.load("assets/rock.png").convert_alpha()
+nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 
-collectible_images = [coin_img, book_img]
+collectible_images = [coin_img, book_img,nerd_img]
 obstacle_images = [cone_img, rock_img]
 
 # --- FONTS ---
@@ -54,6 +56,7 @@ font = pygame.font.Font("assets/ByteBounce.ttf", 45)
 scoreFont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 title_font = pygame.font.Font("assets/ByteBounce.ttf", 72)
+ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
 
 
 class Button:
@@ -124,6 +127,8 @@ def run_game():
     score = 0
     health = 100
     game_time = 20.0
+    multi = 1
+    buff_timer = 0.0
 
     running = True
     while running:
@@ -163,8 +168,18 @@ def run_game():
         collectibles.update()
         obstacles.update()
 
+        if buff_timer > 0.0:
+            buff_timer -= dt
+            if buff_timer <= 0.0:
+                multi = 1
+
         for c in pygame.sprite.spritecollide(player, collectibles, True):
-            score += 1
+            # Base score affected by active multiplier
+            score += 1 * multi
+            # If the collected item is the nerd image, activate 2x buff
+            if getattr(c, "image_original", None) == nerd_img:
+                multi = 2
+                buff_timer = 8.0
             health = min(100, health + 5)
 
         for o in pygame.sprite.spritecollide(player, obstacles, True):
@@ -180,6 +195,13 @@ def run_game():
 
         time_text = font.render(f"Time: {int(game_time)}", True, BLACK)
         screen.blit(time_text, (600, 20))
+
+        if multi > 1:
+            screen.blit(border_img,(SCREEN_WIDTH//2-140, 67))
+            buff_text = ThaiFont.render("เข้าเดือน!!!", True, RED)
+
+            screen.blit(buff_text, (SCREEN_WIDTH//2-120, 60))
+            pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
 
         health_pos = 27
         health_text = font.render("Health : ", True, BLACK)
