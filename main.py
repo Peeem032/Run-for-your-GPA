@@ -16,8 +16,8 @@ SCROLL_SPEED = 5
 # Perspective road width
 ROAD_WIDTH_BOTTOM = SCREEN_WIDTH * 0.25
 ROAD_WIDTH_TOP = SCREEN_WIDTH * 0.05
-HORIZON = SCREEN_HEIGHT // 2
-ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON
+HORIZON = SCREEN_HEIGHT // 2 - 50
+ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON+50
 
 # --- COLORS ---
 SKY_BLUE = (135, 206, 235)
@@ -151,7 +151,7 @@ while running:
 
     # --- DRAW HEALTH BAR ---
     healthPos = 22
-    health_text = font.render("Health : ",True,WHITE)
+    health_text = font.render("Health : ",True,BLACK)
     screen.blit(health_text,(200,healthPos-2))
     bar_x, bar_y, bar_w, bar_h = 20, 60, 200, 20
     pygame.draw.rect(screen, DARK_RED, (300,healthPos,bar_w, bar_h))  # Empty bar
