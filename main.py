@@ -40,10 +40,10 @@ player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
 
 # --- LOAD OBJECT IMAGES ---
 # Load collectible and obstacle graphics
-coin_img = pygame.image.load("assets/coin.png").convert_alpha()
-book_img = pygame.image.load("assets/book.png").convert_alpha()
-cone_img = pygame.image.load("assets/cone.png").convert_alpha()
-rock_img = pygame.image.load("assets/rock.png").convert_alpha()
+coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
+book_img = pygame.image.load("assets/book_2d.png").convert_alpha()
+cone_img = pygame.image.load("assets/cone_2d.png").convert_alpha()
+rock_img = pygame.image.load("assets/rock_2d.png").convert_alpha()
 
 collectible_images = [coin_img, book_img]
 obstacle_images = [cone_img, rock_img]
@@ -81,7 +81,7 @@ while running:
 
     # --- DRAW SKY AND GRASS ---
     screen.fill(SKY_BLUE)
-    bg_img = pygame.image.load("assets/bg.png").convert_alpha()
+    bg_img = pygame.image.load("assets/bg2.png").convert_alpha()
     sky_img = pygame.image.load("assets/sky.png").convert_alpha()
     screen.blit(sky_img, (0, 0))
     screen.blit(bg_img, (0, 0))
