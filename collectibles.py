@@ -4,7 +4,7 @@ import random
 # Constants for perspective motion
 MAX_DEPTH = 1.0
 MIN_DEPTH = 0.05   # The closest visible depth before disappearing
-SPEED = 0.01       # How fast the collectible moves toward the camera
+SPEED = 0.0075       # How fast the collectible moves toward the camera
 
 class Collectible(pygame.sprite.Sprite):
     def __init__(self, road_center, road_width_bottom, road_width_top, images):

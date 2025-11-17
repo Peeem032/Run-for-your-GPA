@@ -16,7 +16,7 @@ SCROLL_SPEED = 5
 ROAD_WIDTH_BOTTOM = SCREEN_WIDTH * 0.7
 ROAD_WIDTH_TOP = SCREEN_WIDTH * 0.05
 HORIZON = SCREEN_HEIGHT // 2 - 32
-ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON
+ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON 
 
 # --- COLORS ---
 SKY_BLUE = (135, 206, 235)
@@ -42,23 +42,22 @@ gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
 timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
 border_img = pygame.image.load("assets/border.png").convert_alpha()
 
-<<<<<<< HEAD
-coin_img = pygame.image.load("assets/coin.png").convert_alpha()
-book_img = pygame.image.load("assets/book.png").convert_alpha()
-cone_img = pygame.image.load("assets/cone.png").convert_alpha()
-rock_img = pygame.image.load("assets/rock.png").convert_alpha()
-nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
-=======
+
+# --- LOAD PLAYER ---
+player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
+
 # --- LOAD OBJECT IMAGES ---
 # Load collectible and obstacle graphics
 coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
 book_img = pygame.image.load("assets/book_2d.png").convert_alpha()
 cone_img = pygame.image.load("assets/cone_2d.png").convert_alpha()
 rock_img = pygame.image.load("assets/rock_2d.png").convert_alpha()
->>>>>>> 4da3c5af6aa656105458f7183431136a6b29e2e2
+popbus_img = pygame.image.load("assets/popbus_2d.png").convert_alpha()
+work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
+nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 
-collectible_images = [coin_img, book_img,nerd_img]
-obstacle_images = [cone_img, rock_img]
+collectible_images = [coin_img, book_img,nerd_img,work_img]
+obstacle_images = [cone_img, rock_img , popbus_img]
 
 # --- FONTS ---
 font = pygame.font.Font("assets/ByteBounce.ttf", 45)
@@ -88,25 +87,10 @@ class Button:
         return action
 
 
-<<<<<<< HEAD
 def draw_road(surface, scroll):
     road_view = pygame.Surface((SCREEN_WIDTH, ROAD_HEIGHT), pygame.SRCALPHA)
     for y in range(ROAD_HEIGHT):
         map_y = int(((scroll + (y / ROAD_HEIGHT) * map_h)) % map_h)
-=======
-    # --- DRAW SKY AND GRASS ---
-    screen.fill(SKY_BLUE)
-    bg_img = pygame.image.load("assets/bg2.png").convert_alpha()
-    sky_img = pygame.image.load("assets/sky.png").convert_alpha()
-    screen.blit(sky_img, (0, 0))
-    screen.blit(bg_img, (0, 0))
-    
-
-    # --- DRAW PERSPECTIVE ROAD ---
-    road_view = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT // 2), pygame.SRCALPHA)
-    for y in range(SCREEN_HEIGHT // 2):
-        map_y = int(((scroll + (y / (SCREEN_HEIGHT // 2)) * map_h)) % map_h)
->>>>>>> 4da3c5af6aa656105458f7183431136a6b29e2e2
         src_line = road_texture.subsurface((0, map_y, map_w, 1))
         scale = y / ROAD_HEIGHT
         line_width = ROAD_WIDTH_TOP + (ROAD_WIDTH_BOTTOM - ROAD_WIDTH_TOP) * scale
@@ -193,7 +177,7 @@ def run_game():
         obstacles.update()
 
         if buff_timer > 0.0:
-            buff_timer -= dt
+            buff_timer = max(0.0, buff_timer - dt)
             if buff_timer <= 0.0:
                 multi = 1
 
@@ -209,7 +193,6 @@ def run_game():
         for o in pygame.sprite.spritecollide(player, obstacles, True):
             score -= 1
             health -= 15
-        buff_timer = max(0.0, buff_timer - dt)
         collectibles.draw(screen)
         obstacles.draw(screen)
         player.draw(screen)
