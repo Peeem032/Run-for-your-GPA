@@ -15,7 +15,7 @@ class Player(pygame.sprite.Sprite):
         ]
 
         self.run_frames = [
-            pygame.transform.scale(img, (100, 100)) for img in self.run_frames
+            pygame.transform.scale(img, (150, 150)) for img in self.run_frames
         ]
 
         self.current_frame = 0

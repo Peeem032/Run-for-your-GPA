@@ -4,7 +4,7 @@ import random
 # Constants for perspective scaling and motion
 MAX_DEPTH = 1.0
 MIN_DEPTH = 0.05
-SPEED = 0.01
+SPEED = 0.0075
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, road_center, road_width_bottom, road_width_top, images):
