@@ -39,6 +39,6 @@ class Collectible(pygame.sprite.Sprite):
         # Compute screen position according to the perspective road shape
         road_half_width = (self.road_width_top + (self.road_width_bottom - self.road_width_top) * (1 - self.depth)) / 2
         screen_x = self.road_center + self.offset_x * road_half_width
-        screen_y = 350 + (1 - self.depth) * 350  # Vertical movement along road depth
+        screen_y = 300 + (1 - self.depth) * 320  # Vertical movement along road depth
 
         self.rect = self.image.get_rect(center=(screen_x, screen_y))
