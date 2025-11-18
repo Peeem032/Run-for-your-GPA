@@ -32,11 +32,11 @@ pygame.display.set_caption("Run for Your GPA - 3D Road")
 clock = pygame.time.Clock()
 
 # --- ASSETS ---
-road_texture = pygame.image.load("assets/st_road.png").convert_alpha()
+road_texture = pygame.image.load("assets/road3.png").convert_alpha()
 map_w, map_h = road_texture.get_size()
 
 sky_img = pygame.image.load("assets/sky.png").convert_alpha()
-bg_img = pygame.image.load("assets/bg.png").convert_alpha()
+bg_img = pygame.image.load("assets/bg2.png").convert_alpha()
 play_button_img = pygame.image.load("assets/start_button.png").convert_alpha()
 gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
 timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
@@ -49,14 +49,16 @@ player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
 # --- LOAD OBJECT IMAGES ---
 # Load collectible and obstacle graphics
 coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
-book_img = pygame.image.load("assets/book_2d.png").convert_alpha()
-cone_img = pygame.image.load("assets/cone_2d.png").convert_alpha()
-rock_img = pygame.image.load("assets/rock_2d.png").convert_alpha()
+book_img = pygame.image.load("assets/book2_2d.png").convert_alpha()
+cone_img = pygame.image.load("assets/cone2_2d.png").convert_alpha()
+rock_img = pygame.image.load("assets/rock2_2d.png").convert_alpha()
 popbus_img = pygame.image.load("assets/popbus_2d.png").convert_alpha()
 work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
-nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 
-collectible_images = [coin_img, book_img,nerd_img,work_img]
+nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
+speed_img = pygame.image.load("assets/book.png").convert_alpha()
+
+collectible_images = [coin_img, book_img,nerd_img,work_img,speed_img]
 obstacle_images = [cone_img, rock_img , popbus_img]
 
 # --- FONTS ---
@@ -137,6 +139,9 @@ def run_game():
     game_time = 60.0
     multi = 1
     buff_timer = 0.0
+    nerd_active = False
+    speed_timer = 0.0
+    speed_active = False
 
     running = True
     while running:
@@ -168,7 +173,15 @@ def run_game():
         spawn_timer -= 1
         if spawn_timer <= 0:
             if random.random() < 0.6:
-                collectibles.add(Collectible(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images))
+                new_collectible = Collectible(
+                    SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images
+                )
+                img_ref = getattr(new_collectible, "image_original", None)
+                # Prevent nerd or speed pickups from spawning while their buffs are active
+                if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img):
+                    new_collectible.kill()
+                else:
+                    collectibles.add(new_collectible)
             else:
                 obstacles.add(Obstacle(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images))
             spawn_timer = random.randint(30, 50)
@@ -180,6 +193,14 @@ def run_game():
             buff_timer = max(0.0, buff_timer - dt)
             if buff_timer <= 0.0:
                 multi = 1
+                nerd_active = False
+        
+        #speed
+        if speed_timer > 0.0:
+            speed_timer = max(0.0, speed_timer - dt)
+            if speed_timer <= 0.0:
+                player.player_speed = 5
+                speed_active = False
 
         for c in pygame.sprite.spritecollide(player, collectibles, True):
             # Base score affected by active multiplier
@@ -188,6 +209,22 @@ def run_game():
             if getattr(c, "image_original", None) == nerd_img:
                 multi = 2
                 buff_timer = 8.0
+                nerd_active = True
+                # Despawn any other nerd collectibles currently on screen
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == nerd_img:
+                        other.kill()
+
+            #speed
+            elif getattr(c, "image_original", None) == speed_img:
+                player.player_speed = 10
+                speed_timer = 8.0
+                speed_active = True
+                # Despawn any other speed collectibles currently on screen
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == speed_img:
+                        other.kill()
+
             health = min(100, health + 5)
 
         for o in pygame.sprite.spritecollide(player, obstacles, True):
@@ -204,13 +241,18 @@ def run_game():
         screen.blit(time_text, (600, 20))
 
         if multi > 1:
-            screen.blit(border_img,(SCREEN_WIDTH//2-140, 67))
-            buff_text = ThaiFont.render("เข้าเดือน!!!", True, RED)
+            #screen.blit(border_img,(SCREEN_WIDTH//2-140, 67))
+            buff_text = ThaiFont.render("เข้าเดือน!!! x2 score", True, RED)
             buff_count = scoreFont.render(f"Buff : {int(buff_timer)}",True, RED)
 
-            screen.blit(buff_text, (SCREEN_WIDTH//2-120, 60))
+            screen.blit(buff_text, (SCREEN_WIDTH//2-250, 60))
             screen.blit(buff_count,(SCREEN_WIDTH//2-75, 175))
             pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
+
+        if player.player_speed > 5:
+            speed_count = scoreFont.render(f"Speed : {int(speed_timer)}",True, SKY_BLUE)
+            screen.blit(speed_count,(SCREEN_WIDTH//2-75, 225))
+            pygame.draw.rect(screen, SKY_BLUE , [0, 0, 1000, 700], 1)
 
         health_pos = 27
         health_text = font.render("Health : ", True, BLACK)
