@@ -2,7 +2,7 @@ import pygame
 
 # Player constants
 PLAYER_RADIUS = 40
-PLAYER_SPEED = 5
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos):
@@ -24,6 +24,7 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.run_frames[self.current_frame]
         self.rect = self.image.get_rect(center=pos)
+        self.player_speed = 5
 
         # Store position as floats for smoother movement
         self.x = pos[0]
@@ -34,9 +35,9 @@ class Player(pygame.sprite.Sprite):
         move_x = 0
 
         if keys[pygame.K_LEFT]:
-            move_x -= PLAYER_SPEED
+            move_x -= self.player_speed
         if keys[pygame.K_RIGHT]:
-            move_x += PLAYER_SPEED
+            move_x += self.player_speed
 
         self.x += move_x * dt * 60
 
