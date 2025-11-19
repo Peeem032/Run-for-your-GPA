@@ -19,7 +19,7 @@ class Objects(pygame.sprite.Sprite):
 
         # Start far away
         self.depth = MAX_DEPTH
-        self.offset_x = random.uniform(-0.8,0.8)
+        self.offset_x = random.uniform(-0.7,0.7)
     def update(self):
         # Move closer to the player
         self.depth -= SPEED #move

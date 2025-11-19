@@ -32,7 +32,7 @@ pygame.display.set_caption("Run for Your GPA - 3D Road")
 clock = pygame.time.Clock()
 
 #assets
-road_texture = pygame.image.load("assets/road3.png").convert_alpha()
+road_texture = pygame.image.load("assets/road4.png").convert_alpha()
 map_w, map_h = road_texture.get_size()
 
 sky_img = pygame.image.load("assets/sky.png").convert_alpha()
