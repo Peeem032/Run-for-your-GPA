@@ -1,3 +1,4 @@
+from asyncio import shield
 import pygame
 import sys
 import random
@@ -57,10 +58,11 @@ work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
 
 nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 speed_img = pygame.image.load("assets/book.png").convert_alpha()
+shield_img = pygame.image.load("assets/coin.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
 speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
 
-collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img]
+collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img]
 obstacle_images = [cone_img, rock_img , popbus_img]
 
 #fonts
@@ -70,8 +72,11 @@ GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 title_font = pygame.font.Font("assets/ByteBounce.ttf", 80)
 ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
 
+#sfx
 ding_sfx = pygame.mixer.Sound("SFX/ding2.mp3")
 hit_sfx = pygame.mixer.Sound("SFX/hit.mp3")
+lose_sfx = pygame.mixer.Sound("SFX/lose.mp3")
+block_sfx = pygame.mixer.Sound("SFX/block.mp3")
 
 
 
@@ -130,16 +135,19 @@ def show_main_menu():
         pygame.display.flip()
         clock.tick(FPS)
 
-def show_end(): #end screen
+def show_end(score): #end screen
     retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
+    lose_sfx.play()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
 
         screen.fill(BLACK)
+        score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
+        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
         retry_text = title_font.render("TRY AGAIN?",True,WHITE)
-        screen.blit(retry_text, (SCREEN_WIDTH//2-150, SCREEN_HEIGHT//2-100))
+        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-100))
 
         if retry_button.draw(screen):
             return True
@@ -165,6 +173,7 @@ def run_game():
     nerd_active = False
     speed_timer = 0.0
     speed_active = False
+    shieldStatus = False
 
     running = True
     while running:
@@ -201,7 +210,7 @@ def run_game():
                 new_collectible = Collectible(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images) #from collectables.py
                 img_ref = getattr(new_collectible, "image_original", None)
                 # despawn when have buff
-                if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img):
+                if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img) or (shieldStatus and img_ref == shield_img):
                     new_collectible.kill()
                 else:
                     collectibles.add(new_collectible)
@@ -250,13 +259,27 @@ def run_game():
                     if getattr(other, "image_original", None) == speed_img:
                         other.kill()
 
+            #shield
+            elif getattr(collect, "image_original", None) == shield_img:
+                shieldStatus = True
+                # Despawn other speed_img
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == shield_img:
+                        other.kill()
+
             health = min(100, health + 5) #player health
 
         #obstacles
         for obs in pygame.sprite.spritecollide(player, obstacles, True):
             hit_sfx.play()
-            score -= 1
-            health -= 15
+            if shieldStatus==True:
+                block_sfx.play()
+                score = score
+                health = health
+                shieldStatus = False
+            else:
+                score -= 1
+                health -= 15
 
         collectibles.draw(screen)
         obstacles.draw(screen)
@@ -270,7 +293,7 @@ def run_game():
 
         #x2 buff
         if multi > 1:
-            buff_count = scoreFont.render(f"Buff: {int(buff_timer)}",True, RED)
+            buff_count = scoreFont.render(f"x2: {int(buff_timer)}",True, RED)
             screen.blit(x2icon_img,(25,100))
             screen.blit(buff_count,(125,125))
             pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
@@ -281,6 +304,11 @@ def run_game():
             screen.blit(speedicon_img,(25,210))
             screen.blit(speed_count,(125,235))
             pygame.draw.rect(screen, SKY_BLUE , [0, 0, 1000, 700], 1)
+        
+        #shield
+        if shieldStatus == True:
+            shield_count = scoreFont.render("Shield On!",True, BLACK)
+            screen.blit(shield_count,(SCREEN_WIDTH//2-100,100))
 
         #health bar
         health_pos = 27
@@ -294,26 +322,26 @@ def run_game():
 
         #dies
         if health <= 0:
-            img_width, img_height = gameover_img.get_size()
-            x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
-            y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
+            #img_width, img_height = gameover_img.get_size()
+            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
+            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
             #screen.fill(SKY_BLUE)
             #screen.blit(gameover_img, (x_pos, y_pos))
             pygame.display.flip()
-            return show_end()
+            return show_end(score)
             
 
         #times up
         if game_time <= 0:
-            img_width, img_height = timesup_img.get_size()
-            x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
-            y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
-            screen.fill(SKY_BLUE)
-            screen.blit(timesup_img, (x_pos, y_pos))
-            score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
-            screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) + 75))
+            #img_width, img_height = timesup_img.get_size()
+            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
+            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
+            #screen.fill(SKY_BLUE)
+            #screen.blit(timesup_img, (x_pos, y_pos))
+            #score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
+            #screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) + 75))
             pygame.display.flip()
-            return show_end()
+            return show_end(score)
             
 
         pygame.display.flip()
