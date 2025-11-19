@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 from player import Player
 from objects import Objects
 
@@ -41,6 +42,8 @@ play_button_img = pygame.image.load("assets/start_button.png").convert_alpha()
 gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
 timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
 border_img = pygame.image.load("assets/border.png").convert_alpha()
+cover_game_img = pygame.image.load("assets/cover_game.png").convert_alpha()
+player_dei_img = pygame.image.load("assets/player_dei.png").convert_alpha()
 
 
 #player
@@ -70,6 +73,7 @@ scoreFont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 title_font = pygame.font.Font("assets/ByteBounce.ttf", 80)
 ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
+pixel_font = pygame.font.Font("assets/PixelifySans-VariableFont_wght.ttf", 60)
 
 #sfx
 ding_sfx = pygame.mixer.Sound("SFX/ding2.mp3")
@@ -88,14 +92,17 @@ class Button:
     def draw(self, surface):
         action = False
         pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
+        is_hovered = self.rect.collidepoint(pos)
+        if is_hovered:
             if pygame.mouse.get_pressed()[0] and not self.clicked:
                 self.clicked = True
                 action = True
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
 
-        surface.blit(self.image, self.rect)
+        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0))
+
+        surface.blit(self.image, self.rect.move(0, offset_y))
         return action
 
 #draw perspective road
@@ -114,18 +121,23 @@ def draw_road(surface, scroll):
 
 #main menu
 def show_main_menu():
-    start_button = Button((SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60), play_button_img)
+    scaled_button = pygame.transform.scale(play_button_img, (int(play_button_img.get_width() * 0.8), int(play_button_img.get_height() * 0.8)))
+    start_button = Button((SCREEN_WIDTH//2, 560), scaled_button)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+
         #TITLE SCREEN (Change)
-        screen.fill(SKY_BLUE)
-        title_text = title_font.render("Run for Your GPA", True, WHITE)
-        subtitle_text = font.render("Click Start to begin", True, WHITE)
-        screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 3 - 70))
-        screen.blit(subtitle_text, (SCREEN_WIDTH // 2 - subtitle_text.get_width() // 2, SCREEN_HEIGHT // 3 + 20))
+        img_width, img_height = cover_game_img.get_size()
+        scale_factor = min(SCREEN_WIDTH / img_width, SCREEN_HEIGHT / img_height)
+        scaled_width = int(img_width * scale_factor)
+        scaled_height = int(img_height * scale_factor)
+        scaled_img = pygame.transform.scale(cover_game_img, (scaled_width, scaled_height))
+        x = (SCREEN_WIDTH - scaled_width) // 2
+        y = (SCREEN_HEIGHT - scaled_height) // 2
+        screen.blit(scaled_img, (x, y))
 
         #show button
         if start_button.draw(screen):
@@ -135,7 +147,7 @@ def show_main_menu():
         clock.tick(FPS)
 
 def show_end(score): #end screen
-    retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
+    retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200), play_button_img)
     lose_sfx.play()
     while True:
         for event in pygame.event.get():
@@ -145,9 +157,12 @@ def show_end(score): #end screen
 
         screen.fill(BLACK)
         score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
-        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
+        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 300))
         retry_text = title_font.render("TRY AGAIN?",True,WHITE)
-        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-100))
+        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-250))
+        player_dei_scaled = pygame.transform.scale(player_dei_img, (300, 300))
+        player_rect = player_dei_scaled.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+        screen.blit(player_dei_scaled, player_rect)
 
         if retry_button.draw(screen):
             return True
