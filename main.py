@@ -6,6 +6,7 @@ from collectibles import Collectible
 from obstacles import Obstacle
 
 pygame.init()
+pygame.mixer.init()
 
 # settings
 SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 700
@@ -25,7 +26,7 @@ DARK_RED = (150, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 220, 0)
 BLACK = (0, 0, 0)
-BLUE = (3, 252, 223)
+BLUE = (3, 107, 252)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Run for Your GPA - 3D Road")
@@ -57,6 +58,7 @@ work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
 nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 speed_img = pygame.image.load("assets/book.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
+speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
 
 collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img]
 obstacle_images = [cone_img, rock_img , popbus_img]
@@ -67,6 +69,10 @@ scoreFont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 title_font = pygame.font.Font("assets/ByteBounce.ttf", 80)
 ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
+
+ding_sfx = pygame.mixer.Sound("SFX/ding2.mp3")
+hit_sfx = pygame.mixer.Sound("SFX/hit.mp3")
+
 
 
 class Button:
@@ -104,18 +110,16 @@ def draw_road(surface, scroll):
 
 #main menu
 def show_main_menu():
-    start_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
+    start_button = Button((SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60), play_button_img)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-
         #TITLE SCREEN (Change)
         screen.fill(SKY_BLUE)
         title_text = title_font.render("Run for Your GPA", True, WHITE)
         subtitle_text = font.render("Click Start to begin", True, WHITE)
-
         screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 3 - 70))
         screen.blit(subtitle_text, (SCREEN_WIDTH // 2 - subtitle_text.get_width() // 2, SCREEN_HEIGHT // 3 + 20))
 
@@ -126,7 +130,7 @@ def show_main_menu():
         pygame.display.flip()
         clock.tick(FPS)
 
-def show_end():
+def show_end(): #end screen
     retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
     while True:
         for event in pygame.event.get():
@@ -177,12 +181,12 @@ def run_game():
 
         scroll = (scroll - SCROLL_SPEED) % map_h
 
-        screen.fill(SKY_BLUE)
         screen.blit(sky_img, (0, 0))
         screen.blit(bg_img, (0, 0))
         pygame.draw.rect(screen, WHITE, (0, SCREEN_HEIGHT // 71, SCREEN_WIDTH, SCREEN_HEIGHT // 14))
 
         draw_road(screen, scroll)
+
 
         #fix on track
         player_radius = 20
@@ -224,6 +228,7 @@ def run_game():
 
         #collectables
         for collect in pygame.sprite.spritecollide(player, collectibles, True):
+            ding_sfx.play()
             score += 1 * multi
             # If the collected item is the nerd image, activate 2x buff
             if getattr(collect, "image_original", None) == nerd_img:
@@ -249,6 +254,7 @@ def run_game():
 
         #obstacles
         for obs in pygame.sprite.spritecollide(player, obstacles, True):
+            hit_sfx.play()
             score -= 1
             health -= 15
 
@@ -264,15 +270,16 @@ def run_game():
 
         #x2 buff
         if multi > 1:
-            buff_count = scoreFont.render(f"Buff : {int(buff_timer)}",True, RED)
+            buff_count = scoreFont.render(f"Buff: {int(buff_timer)}",True, RED)
             screen.blit(x2icon_img,(25,100))
-            screen.blit(buff_count,(115,120))
+            screen.blit(buff_count,(125,125))
             pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
 
         #speed buff
         if player.player_speed > 5:
-            speed_count = scoreFont.render(f"Speed : {int(speed_timer)}",True, BLUE)
-            screen.blit(speed_count,(125,200))
+            speed_count = scoreFont.render(f"Speed: {int(speed_timer)}",True, BLUE)
+            screen.blit(speedicon_img,(25,210))
+            screen.blit(speed_count,(125,235))
             pygame.draw.rect(screen, SKY_BLUE , [0, 0, 1000, 700], 1)
 
         #health bar
