@@ -51,18 +51,21 @@ coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
 book_img = pygame.image.load("assets/book2_2d.png").convert_alpha()
 cone_img = pygame.image.load("assets/cone2_2d.png").convert_alpha()
 rock_img = pygame.image.load("assets/rock2_2d.png").convert_alpha()
-popbus_img = pygame.image.load("assets/popbus_2d.png").convert_alpha()
+popbus_img = pygame.image.load("assets/big_popbus.png").convert_alpha()
 work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
+gradeA_img = pygame.image.load("assets/grade_A.png").convert_alpha()
+gradeF_img = pygame.image.load("assets/grade_F.png").convert_alpha()
+
 
 nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
 speed_img = pygame.image.load("assets/book.png").convert_alpha()
-shield_img = pygame.image.load("assets/coin.png").convert_alpha()
+shield_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
 speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
-shieldicon_img = pygame.image.load("assets/border.png").convert_alpha()
+shieldicon_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 
-collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img]
-obstacle_images = [cone_img, rock_img , popbus_img]
+collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img, gradeA_img]
+obstacle_images = [cone_img, rock_img , popbus_img , gradeF_img]
 
 #fonts
 font = pygame.font.Font("assets/ByteBounce.ttf", 45)
@@ -142,7 +145,6 @@ def show_end(score): #end screen
             if event.type == pygame.QUIT:
                 return False
 
-
         screen.fill(BLACK)
         score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
         screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
@@ -177,7 +179,7 @@ def run_game():
 
     running = True
     while running:
-        dt = clock.tick(FPS) / 1000.0
+        dt = clock.tick(FPS) / 1000.0 # change to game second
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -198,8 +200,8 @@ def run_game():
 
 
         #fix on track
-        player_radius = 20
-        road_left = max(player_radius, SCREEN_WIDTH / 2 - ROAD_WIDTH_BOTTOM + player_radius)
+        player_radius = 300
+        road_left = max(player_radius, SCREEN_WIDTH/2 - ROAD_WIDTH_BOTTOM + player_radius)
         road_right = min(SCREEN_WIDTH - player_radius, SCREEN_WIDTH / 2 + ROAD_WIDTH_BOTTOM - player_radius)
         player.clamp(road_left, road_right)
 
@@ -213,7 +215,7 @@ def run_game():
                 if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img) or (shieldStatus and img_ref == shield_img):
                     new_collectible.kill()
                 else:
-                    collectibles.add(new_collectible) #else add to collectable list
+                    collectibles.add(new_collectible) #else add to pygame group
             else: # if not collectable. it is obstacle
                 obstacles.add(Objects(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images)) #spawn object
             spawn_timer = random.randint(30, 50) #spawn every 30-50 frames
@@ -223,7 +225,7 @@ def run_game():
 
         #x2 buff
         if buff_timer > 0.0:
-            buff_timer = max(0.0, buff_timer - dt)
+            buff_timer = max(0.0, buff_timer - dt) #never below 0
             if buff_timer <= 0.0:
                 multi = 1
                 nerd_active = False
@@ -240,7 +242,7 @@ def run_game():
             ding_sfx.play()
             score += 1 * multi
             # If the collected item is the nerd image, activate 2x buff
-            if getattr(collect, "image_original", None) == nerd_img:
+            if getattr(collect, "image_original", None) == nerd_img: #image_original is from objects.py . it sprite source image from collectabel list
                 multi = 2
                 buff_timer = 8.0
                 nerd_active = True
@@ -307,9 +309,9 @@ def run_game():
         
         #shield
         if shieldStatus == True:
-            #shield_count = scoreFont.render("Shield On!",True, BLACK)
-            #screen.blit(shield_count,(SCREEN_WIDTH//2-100,100))
-            screen.blit(shieldicon_img,(350,100))
+            shield_text = scoreFont.render("Shield On!",True, BLACK)
+            screen.blit(shieldicon_img,(350,115))
+            screen.blit(shield_text,(420,120))
 
         #health bar
         health_pos = 27
@@ -323,24 +325,12 @@ def run_game():
 
         #dies
         if health <= 0:
-            #img_width, img_height = gameover_img.get_size()
-            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
-            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
-            #screen.fill(SKY_BLUE)
-            #screen.blit(gameover_img, (x_pos, y_pos))
             pygame.display.flip()
             return show_end(score)
             
 
         #times up
         if game_time <= 0:
-            #img_width, img_height = timesup_img.get_size()
-            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
-            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
-            #screen.fill(SKY_BLUE)
-            #screen.blit(timesup_img, (x_pos, y_pos))
-            #score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
-            #screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) + 75))
             pygame.display.flip()
             return show_end(score)
             
