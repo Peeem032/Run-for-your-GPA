@@ -3,7 +3,7 @@ import random
 
 
 MAX_DEPTH = 1.0 #top spawn
-MIN_DEPTH = 0.05 #bottom
+MIN_DEPTH = 0.01 #bottom
 SPEED = 0.0075 #object speed
 
 class Objects(pygame.sprite.Sprite):
@@ -19,12 +19,11 @@ class Objects(pygame.sprite.Sprite):
 
         # Start far away
         self.depth = MAX_DEPTH
-        self.offset_x = random.uniform(-0.8, 0.8)
-
+        self.offset_x = random.uniform(-0.8,0.8)
     def update(self):
         # Move closer to the player
-        self.depth -= SPEED
-        if self.depth < MIN_DEPTH:
+        self.depth -= SPEED #move
+        if self.depth <= MIN_DEPTH-5:
             self.kill()
             return
 
