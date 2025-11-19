@@ -1,159 +1,368 @@
 import pygame
-import pytmx
 import sys
 import random
 from player import Player
-from collectibles import Collectible
-from obstacles import Obstacle
+from objects import Objects
 
 pygame.init()
+pygame.mixer.init()
 
-# --- SETTINGS ---
+# settings
 SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 700
 FPS = 60
 SCROLL_SPEED = 5
 
-# Perspective road width
-ROAD_WIDTH_BOTTOM = SCREEN_WIDTH * 0.25
+# Perspective road 
+ROAD_WIDTH_BOTTOM = SCREEN_WIDTH * 0.7
 ROAD_WIDTH_TOP = SCREEN_WIDTH * 0.05
-HORIZON = SCREEN_HEIGHT // 2
-ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON
+HORIZON = SCREEN_HEIGHT // 2 - 35
+ROAD_HEIGHT = SCREEN_HEIGHT - HORIZON 
 
-# --- COLORS ---
+# colors
 SKY_BLUE = (135, 206, 235)
 RED = (255, 50, 50)
 DARK_RED = (150, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 220, 0)
+BLACK = (0, 0, 0)
+BLUE = (3, 107, 252)
 
-# --- INIT WINDOW ---
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Run for Your GPA - 3D Road")
 clock = pygame.time.Clock()
 
-
-road_texture = pygame.image.load("assets/st_road.png").convert_alpha()
+#assets
+road_texture = pygame.image.load("assets/road3.png").convert_alpha()
 map_w, map_h = road_texture.get_size()
 
-# --- LOAD PLAYER ---
+sky_img = pygame.image.load("assets/sky.png").convert_alpha()
+bg_img = pygame.image.load("assets/bg2.png").convert_alpha()
+play_button_img = pygame.image.load("assets/start_button.png").convert_alpha()
+gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
+timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
+border_img = pygame.image.load("assets/border.png").convert_alpha()
+
+
+#player
 player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
 
-# --- LOAD OBJECT IMAGES ---
-# Load collectible and obstacle graphics
+# object img
 coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
-book_img = pygame.image.load("assets/book_2d.png").convert_alpha()
-cone_img = pygame.image.load("assets/cone_2d.png").convert_alpha()
-rock_img = pygame.image.load("assets/rock_2d.png").convert_alpha()
+book_img = pygame.image.load("assets/book2_2d.png").convert_alpha()
+cone_img = pygame.image.load("assets/cone2_2d.png").convert_alpha()
+rock_img = pygame.image.load("assets/rock2_2d.png").convert_alpha()
+popbus_img = pygame.image.load("assets/popbus_2d.png").convert_alpha()
+work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
 
-collectible_images = [coin_img, book_img]
-obstacle_images = [cone_img, rock_img]
+nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
+speed_img = pygame.image.load("assets/book.png").convert_alpha()
+shield_img = pygame.image.load("assets/coin.png").convert_alpha()
+x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
+speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
+shieldicon_img = pygame.image.load("assets/border.png").convert_alpha()
 
-# --- SPRITE GROUPS ---
-collectibles = pygame.sprite.Group()
-obstacles = pygame.sprite.Group()
+collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img]
+obstacle_images = [cone_img, rock_img , popbus_img]
 
-# --- GAME VARIABLES ---
-scroll = 0
-spawn_timer = 60
-score = 0
-health = 100  # Player’s HP (health bar)
-font = pygame.font.Font(None, 36)
-running = True
+#fonts
+font = pygame.font.Font("assets/ByteBounce.ttf", 45)
+scoreFont = pygame.font.Font("assets/ByteBounce.ttf", 60)
+GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
+title_font = pygame.font.Font("assets/ByteBounce.ttf", 80)
+ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
 
-# --- MAIN GAME LOOP ---
-while running:
-    dt = clock.tick(FPS) / 1000.0
+#sfx
+ding_sfx = pygame.mixer.Sound("SFX/ding2.mp3")
+hit_sfx = pygame.mixer.Sound("SFX/hit.mp3")
+lose_sfx = pygame.mixer.Sound("SFX/lose.mp3")
+block_sfx = pygame.mixer.Sound("SFX/block.mp3")
 
-    # --- EVENT HANDLING ---
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
 
-    # --- PLAYER MOVEMENT ---
-    keys = pygame.key.get_pressed()
-    player.move(keys, dt)
 
-    # --- SCROLLING ROAD ---
-    scroll = (scroll - SCROLL_SPEED) % map_h
-    if scroll < 0:
-        scroll = map_h
+class Button:
+    def __init__(self, center_pos, image):
+        self.image = image
+        self.rect = self.image.get_rect(center=center_pos)
+        self.clicked = False
 
-    # --- DRAW SKY AND GRASS ---
-    screen.fill(SKY_BLUE)
-    bg_img = pygame.image.load("assets/bg2.png").convert_alpha()
-    sky_img = pygame.image.load("assets/sky.png").convert_alpha()
-    screen.blit(sky_img, (0, 0))
-    screen.blit(bg_img, (0, 0))
-    
+    def draw(self, surface):
+        action = False
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] and not self.clicked:
+                self.clicked = True
+                action = True
+        if not pygame.mouse.get_pressed()[0]:
+            self.clicked = False
 
-    # --- DRAW PERSPECTIVE ROAD ---
-    road_view = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT // 2), pygame.SRCALPHA)
-    for y in range(SCREEN_HEIGHT // 2):
-        map_y = int(((scroll + (y / (SCREEN_HEIGHT // 2)) * map_h)) % map_h)
+        surface.blit(self.image, self.rect)
+        return action
+
+#draw perspective road
+def draw_road(surface, scroll):
+    road_view = pygame.Surface((SCREEN_WIDTH, ROAD_HEIGHT), pygame.SRCALPHA)
+    for y in range(ROAD_HEIGHT):
+        map_y = int(((scroll + (y / ROAD_HEIGHT) * map_h)) % map_h)
         src_line = road_texture.subsurface((0, map_y, map_w, 1))
-        scale = y / (SCREEN_HEIGHT // 2)
-        line_width = 80 + (380 * scale)
+        scale = y / ROAD_HEIGHT
+        line_width = ROAD_WIDTH_TOP + (ROAD_WIDTH_BOTTOM - ROAD_WIDTH_TOP) * scale
         x_pos = SCREEN_WIDTH / 2 - line_width
         dest_width = int(line_width * 2)
         scaled_line = pygame.transform.scale(src_line, (dest_width, 2))
         road_view.blit(scaled_line, (x_pos, y))
-    screen.blit(road_view, (0, SCREEN_HEIGHT // 2))
+    surface.blit(road_view, (0, HORIZON))
 
-    # --- ROAD BOUNDARIES ---
-    # Keep the player inside the visible road area
-    road_left = SCREEN_WIDTH / 2 - ROAD_WIDTH_BOTTOM + 30
-    road_right = SCREEN_WIDTH / 2 + ROAD_WIDTH_BOTTOM - 30
-    player.clamp(road_left, road_right)
+#main menu
+def show_main_menu():
+    start_button = Button((SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60), play_button_img)
 
-    # --- SPAWN OBJECTS ---
-    spawn_timer -= 1
-    if spawn_timer <= 0:
-        if random.random() < 0.6:
-            collectibles.add(Collectible(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images))
-        else:
-            obstacles.add(Obstacle(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images))
-        spawn_timer = random.randint(40, 80)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+        #TITLE SCREEN (Change)
+        screen.fill(SKY_BLUE)
+        title_text = title_font.render("Run for Your GPA", True, WHITE)
+        subtitle_text = font.render("Click Start to begin", True, WHITE)
+        screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 3 - 70))
+        screen.blit(subtitle_text, (SCREEN_WIDTH // 2 - subtitle_text.get_width() // 2, SCREEN_HEIGHT // 3 + 20))
 
-    # --- UPDATE OBJECTS ---
-    collectibles.update()
-    obstacles.update()
+        #show button
+        if start_button.draw(screen):
+            return True
 
-    # --- COLLISIONS ---
-    for c in pygame.sprite.spritecollide(player, collectibles, True):
-        score += 1
-        health = min(100, health + 5)  # Gain small HP when collecting items
-        print(f"💎 Collected item! Score: {score}, HP: {health}")
-
-    for o in pygame.sprite.spritecollide(player, obstacles, True):
-        score -= 1
-        health -= 15  # Lose HP when hitting obstacles
-        print(f"💥 Hit obstacle! Score: {score}, HP: {health}")
-
-    # --- DRAW OBJECTS ---
-    collectibles.draw(screen)
-    obstacles.draw(screen)
-
-    # --- DRAW PLAYER ---
-    player.draw(screen)
-
-    # --- DRAW SCORE ---
-    score_text = font.render(f"Score: {score}", True, WHITE)
-    screen.blit(score_text, (20, 20))
-
-    # --- DRAW HEALTH BAR ---
-    bar_x, bar_y, bar_w, bar_h = 20, 60, 200, 20
-    pygame.draw.rect(screen, DARK_RED, (bar_x, bar_y, bar_w, bar_h))  # Empty bar
-    pygame.draw.rect(screen, GREEN, (bar_x, bar_y, int(bar_w * (health / 100)), bar_h))  # Filled bar
-    pygame.draw.rect(screen, WHITE, (bar_x, bar_y, bar_w, bar_h), 2)  # Border
-
-    # --- GAME OVER CHECK ---
-    if health <= 0:
-        game_over_text = font.render("GAME OVER", True, RED)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
         pygame.display.flip()
-        pygame.time.wait(2000)
-        running = False
+        clock.tick(FPS)
 
-    # --- UPDATE DISPLAY ---
-    pygame.display.flip()
+def show_end(score): #end screen
+    retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
+    lose_sfx.play()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+
+
+        screen.fill(BLACK)
+        score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
+        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
+        retry_text = title_font.render("TRY AGAIN?",True,WHITE)
+        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-100))
+
+        if retry_button.draw(screen):
+            return True
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+#game start
+def run_game():
+    player = Player((SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
+    collectibles = pygame.sprite.Group()
+    obstacles = pygame.sprite.Group()
+
+    scroll = 0
+    spawn_timer = 60
+    score = 0
+    health = 100
+    game_time = 60.0
+    #buff variables
+    multi = 1
+    buff_timer = 0.0
+    nerd_active = False
+    speed_timer = 0.0
+    speed_active = False
+    shieldStatus = False
+
+    running = True
+    while running:
+        dt = clock.tick(FPS) / 1000.0
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+
+        game_time = max(0.0, game_time - dt) 
+
+        keys = pygame.key.get_pressed() #get keys
+        player.move(keys, dt) #from player.py move player
+
+        scroll = (scroll - SCROLL_SPEED) % map_h
+
+        screen.blit(sky_img, (0, 0))
+        screen.blit(bg_img, (0, 0))
+        pygame.draw.rect(screen, WHITE, (0, SCREEN_HEIGHT // 71, SCREEN_WIDTH, SCREEN_HEIGHT // 14))
+
+        draw_road(screen, scroll)
+
+
+        #fix on track
+        player_radius = 20
+        road_left = max(player_radius, SCREEN_WIDTH / 2 - ROAD_WIDTH_BOTTOM + player_radius)
+        road_right = min(SCREEN_WIDTH - player_radius, SCREEN_WIDTH / 2 + ROAD_WIDTH_BOTTOM - player_radius)
+        player.clamp(road_left, road_right)
+
+        #object spawning
+        spawn_timer -= 1
+        if spawn_timer <= 0:
+            if random.random() < 0.6: #random
+                new_collectible = Objects(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images) #spawn object
+                img_ref = getattr(new_collectible, "image_original", None) #check for images
+                # despawn when have buff
+                if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img) or (shieldStatus and img_ref == shield_img):
+                    new_collectible.kill()
+                else:
+                    collectibles.add(new_collectible) #else add to collectable list
+            else: # if not collectable. it is obstacle
+                obstacles.add(Objects(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images)) #spawn object
+            spawn_timer = random.randint(30, 50) #spawn every 30-50 frames
+
+        collectibles.update()
+        obstacles.update()
+
+        #x2 buff
+        if buff_timer > 0.0:
+            buff_timer = max(0.0, buff_timer - dt)
+            if buff_timer <= 0.0:
+                multi = 1
+                nerd_active = False
+        
+        #speed buff
+        if speed_timer > 0.0:
+            speed_timer = max(0.0, speed_timer - dt)
+            if speed_timer <= 0.0:
+                player.player_speed = 5
+                speed_active = False
+
+        #collectables
+        for collect in pygame.sprite.spritecollide(player, collectibles, True):
+            ding_sfx.play()
+            score += 1 * multi
+            # If the collected item is the nerd image, activate 2x buff
+            if getattr(collect, "image_original", None) == nerd_img:
+                multi = 2
+                buff_timer = 8.0
+                nerd_active = True
+                # Despawn other nerd_img
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == nerd_img:
+                        other.kill()
+
+            #speed
+            elif getattr(collect, "image_original", None) == speed_img:
+                player.player_speed = 10
+                speed_timer = 8.0
+                speed_active = True
+                # Despawn other speed_img
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == speed_img:
+                        other.kill()
+
+            #shield
+            elif getattr(collect, "image_original", None) == shield_img:
+                shieldStatus = True
+                # Despawn other speed_img
+                for other in list(collectibles):
+                    if getattr(other, "image_original", None) == shield_img:
+                        other.kill()
+
+            health = min(100, health + 5) #player health
+
+        #obstacles
+        for obs in pygame.sprite.spritecollide(player, obstacles, True):
+            hit_sfx.play()
+            if shieldStatus==True:
+                block_sfx.play()
+                score = score
+                health = health
+                shieldStatus = False
+            else:
+                score = max(0, score - 1) #prevent score negative
+                health -= 15 
+
+        collectibles.draw(screen)
+        obstacles.draw(screen)
+        player.draw(screen)
+
+        #scores
+        score_text = font.render(f"Score: {score}", True, BLACK)
+        screen.blit(score_text, (20, 20))
+        time_text = font.render(f"Time Left: {int(game_time)}", True, BLACK)
+        screen.blit(time_text, (600, 20))
+
+        #x2 buff
+        if multi > 1:
+            buff_count = scoreFont.render(f"x2: {int(buff_timer)}",True, RED)
+            screen.blit(x2icon_img,(25,100))
+            screen.blit(buff_count,(125,125))
+            pygame.draw.rect(screen, [255, 0, 0], [0, 0, 1000, 700], 1)
+
+        #speed buff
+        if player.player_speed > 5:
+            speed_count = scoreFont.render(f"Speed: {int(speed_timer)}",True, BLUE)
+            screen.blit(speedicon_img,(25,210))
+            screen.blit(speed_count,(125,235))
+            pygame.draw.rect(screen, SKY_BLUE , [0, 0, 1000, 700], 1)
+        
+        #shield
+        if shieldStatus == True:
+            #shield_count = scoreFont.render("Shield On!",True, BLACK)
+            #screen.blit(shield_count,(SCREEN_WIDTH//2-100,100))
+            screen.blit(shieldicon_img,(350,100))
+
+        #health bar
+        health_pos = 27
+        health_text = font.render("Health : ", True, BLACK)
+        screen.blit(health_text, (200, 20))
+        bar_w = 200
+        bar_h = 20
+        pygame.draw.rect(screen, DARK_RED, (350, health_pos, bar_w, bar_h))
+        pygame.draw.rect(screen, GREEN, (350, health_pos, int(bar_w * (health / 100)), bar_h))
+        pygame.draw.rect(screen, WHITE, (350, health_pos, bar_w, bar_h), 2)
+
+        #dies
+        if health <= 0:
+            #img_width, img_height = gameover_img.get_size()
+            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
+            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
+            #screen.fill(SKY_BLUE)
+            #screen.blit(gameover_img, (x_pos, y_pos))
+            pygame.display.flip()
+            return show_end(score)
+            
+
+        #times up
+        if game_time <= 0:
+            #img_width, img_height = timesup_img.get_size()
+            #x_pos = (SCREEN_WIDTH // 2) - (img_width // 2)
+            #y_pos = (SCREEN_HEIGHT // 2) - (img_height // 2)
+            #screen.fill(SKY_BLUE)
+            #screen.blit(timesup_img, (x_pos, y_pos))
+            #score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
+            #screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) + 75))
+            pygame.display.flip()
+            return show_end(score)
+            
+
+        pygame.display.flip()
+
+    return True
+
+
+def main():
+    while True:
+        start_requested = show_main_menu() 
+        if not start_requested:
+            break
+
+        continue_running = run_game()
+        if not continue_running:
+            break
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()

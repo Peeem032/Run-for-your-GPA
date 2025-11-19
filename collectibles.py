@@ -4,7 +4,7 @@ import random
 # Constants for perspective motion
 MAX_DEPTH = 1.0
 MIN_DEPTH = 0.05   # The closest visible depth before disappearing
-SPEED = 0.01       # How fast the collectible moves toward the camera
+SPEED = 0.0075       # How fast the collectible moves toward the camera
 
 class Collectible(pygame.sprite.Sprite):
     def __init__(self, road_center, road_width_bottom, road_width_top, images):
@@ -39,6 +39,5 @@ class Collectible(pygame.sprite.Sprite):
         # Compute screen position according to the perspective road shape
         road_half_width = (self.road_width_top + (self.road_width_bottom - self.road_width_top) * (1 - self.depth)) / 2
         screen_x = self.road_center + self.offset_x * road_half_width
-        screen_y = 350 + (1 - self.depth) * 350  # Vertical movement along road depth
-
+        screen_y = 300 + (1 - self.depth) * 320  # Vertical movement along road depth
         self.rect = self.image.get_rect(center=(screen_x, screen_y))
