@@ -1,7 +1,7 @@
 import pygame
 
 # Player constants
-PLAYER_RADIUS = 40
+PLAYER_RADIUS = 20
 
 
 class Player(pygame.sprite.Sprite):
