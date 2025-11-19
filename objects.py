@@ -1,12 +1,12 @@
 import pygame
 import random
 
-# Constants for perspective scaling and motion
-MAX_DEPTH = 1.0
-MIN_DEPTH = 0.05
-SPEED = 0.0075
 
-class Obstacle(pygame.sprite.Sprite):
+MAX_DEPTH = 1.0 #top spawn
+MIN_DEPTH = 0.05 #bottom
+SPEED = 0.0075 #object speed
+
+class Objects(pygame.sprite.Sprite):
     def __init__(self, road_center, road_width_bottom, road_width_top, images):
         super().__init__()
         # Choose a random obstacle image (e.g., cone or rock)
@@ -19,7 +19,7 @@ class Obstacle(pygame.sprite.Sprite):
 
         # Start far away
         self.depth = MAX_DEPTH
-        self.offset_x = random.uniform(-0.7, 0.7)
+        self.offset_x = random.uniform(-0.8, 0.8)
 
     def update(self):
         # Move closer to the player
@@ -30,7 +30,7 @@ class Obstacle(pygame.sprite.Sprite):
 
         # Resize the obstacle as it approaches (perspective scaling)
         scale = (1 - self.depth) * 2.5 + 0.2
-        size = int(40 * scale)
+        size = int(30 * scale)
         if size < 1:
             size = 1
         self.image = pygame.transform.scale(self.image_original, (size, size))

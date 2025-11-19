@@ -1,10 +1,8 @@
-from asyncio import shield
 import pygame
 import sys
 import random
 from player import Player
-from collectibles import Collectible
-from obstacles import Obstacle
+from objects import Objects
 
 pygame.init()
 pygame.mixer.init()
@@ -61,6 +59,7 @@ speed_img = pygame.image.load("assets/book.png").convert_alpha()
 shield_img = pygame.image.load("assets/coin.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
 speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
+shieldicon_img = pygame.image.load("assets/border.png").convert_alpha()
 
 collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img]
 obstacle_images = [cone_img, rock_img , popbus_img]
@@ -143,6 +142,7 @@ def show_end(score): #end screen
             if event.type == pygame.QUIT:
                 return False
 
+
         screen.fill(BLACK)
         score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
         screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
@@ -183,10 +183,10 @@ def run_game():
             if event.type == pygame.QUIT:
                 return False
 
-        game_time = max(0.0, game_time - dt)
+        game_time = max(0.0, game_time - dt) 
 
-        keys = pygame.key.get_pressed()
-        player.move(keys, dt) #from player.py
+        keys = pygame.key.get_pressed() #get keys
+        player.move(keys, dt) #from player.py move player
 
         scroll = (scroll - SCROLL_SPEED) % map_h
 
@@ -207,15 +207,15 @@ def run_game():
         spawn_timer -= 1
         if spawn_timer <= 0:
             if random.random() < 0.6: #random
-                new_collectible = Collectible(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images) #from collectables.py
-                img_ref = getattr(new_collectible, "image_original", None)
+                new_collectible = Objects(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, collectible_images) #spawn object
+                img_ref = getattr(new_collectible, "image_original", None) #check for images
                 # despawn when have buff
                 if (nerd_active and img_ref == nerd_img) or (speed_active and img_ref == speed_img) or (shieldStatus and img_ref == shield_img):
                     new_collectible.kill()
                 else:
-                    collectibles.add(new_collectible)
-            else:
-                obstacles.add(Obstacle(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images))
+                    collectibles.add(new_collectible) #else add to collectable list
+            else: # if not collectable. it is obstacle
+                obstacles.add(Objects(SCREEN_WIDTH // 2, ROAD_WIDTH_BOTTOM, ROAD_WIDTH_TOP, obstacle_images)) #spawn object
             spawn_timer = random.randint(30, 50) #spawn every 30-50 frames
 
         collectibles.update()
@@ -278,8 +278,8 @@ def run_game():
                 health = health
                 shieldStatus = False
             else:
-                score -= 1
-                health -= 15
+                score = max(0, score - 1) #prevent score negative
+                health -= 15 
 
         collectibles.draw(screen)
         obstacles.draw(screen)
@@ -307,8 +307,9 @@ def run_game():
         
         #shield
         if shieldStatus == True:
-            shield_count = scoreFont.render("Shield On!",True, BLACK)
-            screen.blit(shield_count,(SCREEN_WIDTH//2-100,100))
+            #shield_count = scoreFont.render("Shield On!",True, BLACK)
+            #screen.blit(shield_count,(SCREEN_WIDTH//2-100,100))
+            screen.blit(shieldicon_img,(350,100))
 
         #health bar
         health_pos = 27

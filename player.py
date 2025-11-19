@@ -34,9 +34,9 @@ class Player(pygame.sprite.Sprite):
     def move(self, keys, dt):
         move_x = 0
 
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             move_x -= self.player_speed
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             move_x += self.player_speed
 
         self.x += move_x * dt * 60
