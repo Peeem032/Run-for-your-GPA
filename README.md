@@ -8,11 +8,9 @@ Coming soon!
 # Tech stack
 - **Python 3.13.5**
 - **Pygame**
-- **PyTMX** (for reading `.tmx` maps)
-- **Tiled Map Editor** (for creating maps)
 
 # Requirements
-Make sure you have Python 3 installed, then install all dependencies with:
+Make sure you have Python 2 installed, then install all dependencies with:
 ```bash
 pip install -r requirements.txt
 ```
