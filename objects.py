@@ -9,7 +9,7 @@ SPEED = 0.0075 #object speed
 class Objects(pygame.sprite.Sprite):
     def __init__(self, road_center, road_width_bottom, road_width_top, images):
         super().__init__()
-        # Choose a random obstacle image (e.g., cone or rock)
+        # Choose a random obstacle image
         self.image_original = random.choice(images)
 
         # Perspective parameters
@@ -23,7 +23,7 @@ class Objects(pygame.sprite.Sprite):
     def update(self):
         # Move closer to the player
         self.depth -= SPEED #move
-        if self.depth <= MIN_DEPTH-5:
+        if self.depth <= MIN_DEPTH-5: #fix object despawn before map
             self.kill()
             return
 

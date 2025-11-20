@@ -44,6 +44,8 @@ timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
 border_img = pygame.image.load("assets/border.png").convert_alpha()
 cover_game_img = pygame.image.load("assets/cover_game.png").convert_alpha()
 player_dei_img = pygame.image.load("assets/player_dei.png").convert_alpha()
+main_menu = pygame.image.load("assets/mainmenu.png").convert_alpha()
+tutorial_img = pygame.image.load("assets/tutorial.png").convert_alpha()
 
 
 #player
@@ -95,15 +97,17 @@ class Button:
 
     def draw(self, surface):
         action = False
-        if pygame.mouse.get_pressed()[0] and not self.clicked:
-            self.clicked = True
-            action = True
+        mouse_pos = pygame.mouse.get_pos()
+        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0)) #moving button
+        offset_rect = self.rect.move(0, offset_y)
+        if offset_rect.collidepoint(mouse_pos): #check if cursor is on button or not . collide point
+            if pygame.mouse.get_pressed()[0] and not self.clicked: #left click
+                self.clicked = True
+                action = True
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
 
-        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0)) #moving button
-
-        surface.blit(self.image, self.rect.move(0, offset_y))
+        surface.blit(self.image, offset_rect)
         return action
 
 #draw perspective road
@@ -131,15 +135,8 @@ def show_main_menu():
             if event.type == pygame.QUIT:
                 return False
 
-        #TITLE SCREEN   
-        img_width, img_height = cover_game_img.get_size()
-        scale_factor = min(SCREEN_WIDTH / img_width, SCREEN_HEIGHT / img_height)
-        scaled_width = int(img_width * scale_factor)
-        scaled_height = int(img_height * scale_factor)
-        scaled_img = pygame.transform.scale(cover_game_img, (scaled_width, scaled_height))
-        x = (SCREEN_WIDTH - scaled_width) // 2
-        y = (SCREEN_HEIGHT - scaled_height) // 2
-        screen.blit(scaled_img, (x, y))
+        #TITLE SCREEN make it fit
+        screen.blit(cover_game_img,(0,0))
 
         #show button
         if start_button.draw(screen):
@@ -150,6 +147,8 @@ def show_main_menu():
 
 def show_end(score): #end screen
     retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200), play_button_img)
+    scaled_mm_button = pygame.transform.scale(main_menu, (int(main_menu.get_width() * 0.2), int(main_menu.get_height() * 0.2)))
+    main_menu_button = Button((SCREEN_WIDTH // 2-350, SCREEN_HEIGHT // 2 + 200), scaled_mm_button )
     lose_sfx.play()
     while True:
         for event in pygame.event.get():
@@ -166,6 +165,25 @@ def show_end(score): #end screen
         screen.blit(player_dei_scaled, player_rect)
 
         if retry_button.draw(screen):
+            return True
+        
+        if main_menu_button.draw(screen):
+            menu_result = show_main_menu()
+            return menu_result
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+#def show_tutorial():
+    Game_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200), play_button_img)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+        
+        screen.blit(tutorial_img,(0,0))
+
+        if Game_button.draw(screen):
             return True
 
         pygame.display.flip()
@@ -366,8 +384,11 @@ def main():
             break
 
         continue_running = run_game()
+        # If False, user quit - exit program
+        # If True, user wants to retry - loop back to show_main_menu
         if not continue_running:
             break
+        # If continue_running is True, loop back to show_main_menu
 
     pygame.quit()
     sys.exit()
