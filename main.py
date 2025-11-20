@@ -54,20 +54,21 @@ coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
 book_img = pygame.image.load("assets/book2_2d.png").convert_alpha()
 cone_img = pygame.image.load("assets/cone2_2d.png").convert_alpha()
 rock_img = pygame.image.load("assets/rock2_2d.png").convert_alpha()
-popbus_img = pygame.image.load("assets/big_popbus.png").convert_alpha()
+popbus_img = pygame.image.load("assets/big_popbus2.png").convert_alpha()
 work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
 gradeA_img = pygame.image.load("assets/grade_A.png").convert_alpha()
 gradeF_img = pygame.image.load("assets/grade_F.png").convert_alpha()
+exam_img = pygame.image.load("assets/exam_2d.png").convert_alpha()
 
 
 nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
-speed_img = pygame.image.load("assets/book.png").convert_alpha()
+speed_img = pygame.image.load("assets/run.png").convert_alpha()
 shield_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
 speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
 shieldicon_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 
-collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img, gradeA_img]
+collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img, gradeA_img, exam_img]
 obstacle_images = [cone_img, rock_img , popbus_img , gradeF_img]
 
 #fonts
@@ -94,16 +95,13 @@ class Button:
 
     def draw(self, surface):
         action = False
-        pos = pygame.mouse.get_pos()
-        is_hovered = self.rect.collidepoint(pos)
-        if is_hovered:
-            if pygame.mouse.get_pressed()[0] and not self.clicked:
-                self.clicked = True
-                action = True
+        if pygame.mouse.get_pressed()[0] and not self.clicked:
+            self.clicked = True
+            action = True
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
 
-        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0))
+        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0)) #moving button
 
         surface.blit(self.image, self.rect.move(0, offset_y))
         return action
@@ -124,6 +122,7 @@ def draw_road(surface, scroll):
 
 #main menu
 def show_main_menu():
+    #asset is too big . scale down
     scaled_button = pygame.transform.scale(play_button_img, (int(play_button_img.get_width() * 0.8), int(play_button_img.get_height() * 0.8)))
     start_button = Button((SCREEN_WIDTH//2, 560), scaled_button)
 
@@ -132,7 +131,7 @@ def show_main_menu():
             if event.type == pygame.QUIT:
                 return False
 
-        #TITLE SCREEN (Change)
+        #TITLE SCREEN   
         img_width, img_height = cover_game_img.get_size()
         scale_factor = min(SCREEN_WIDTH / img_width, SCREEN_HEIGHT / img_height)
         scaled_width = int(img_width * scale_factor)
@@ -162,8 +161,8 @@ def show_end(score): #end screen
         screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 300))
         retry_text = title_font.render("TRY AGAIN?",True,WHITE)
         screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-250))
-        player_dei_scaled = pygame.transform.scale(player_dei_img, (300, 300))
-        player_rect = player_dei_scaled.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+        player_dei_scaled = pygame.transform.scale(player_dei_img, (300, 300)) #scale assets
+        player_rect = player_dei_scaled.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2)) #get pos
         screen.blit(player_dei_scaled, player_rect)
 
         if retry_button.draw(screen):
@@ -252,6 +251,9 @@ def run_game():
                 player.player_speed = 5
                 speed_active = False
 
+        good_text = font.render("+SCORE",True,GREEN)
+        bad_text = font.render("-SCORE",True,RED)
+
         #collectables
         for collect in pygame.sprite.spritecollide(player, collectibles, True):
             ding_sfx.play()
@@ -283,8 +285,9 @@ def run_game():
                 for other in list(collectibles):
                     if getattr(other, "image_original", None) == shield_img:
                         other.kill()
-
+            
             health = min(100, health + 5) #player health
+            screen.blit(good_text,(SCREEN_WIDTH//2+350,20))
 
         #obstacles
         for obs in pygame.sprite.spritecollide(player, obstacles, True):
@@ -297,6 +300,7 @@ def run_game():
             else:
                 score = max(0, score - 1) #prevent score negative
                 health -= 15 
+            screen.blit(bad_text,(SCREEN_WIDTH//2+350,20))
 
         collectibles.draw(screen)
         obstacles.draw(screen)
