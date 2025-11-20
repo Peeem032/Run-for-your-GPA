@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 from player import Player
 from objects import Objects
 
@@ -41,6 +42,10 @@ play_button_img = pygame.image.load("assets/start_button.png").convert_alpha()
 gameover_img = pygame.image.load("assets/gameover.png").convert_alpha()
 timesup_img = pygame.image.load("assets/times_up.png").convert_alpha()
 border_img = pygame.image.load("assets/border.png").convert_alpha()
+cover_game_img = pygame.image.load("assets/cover_game.png").convert_alpha()
+player_dei_img = pygame.image.load("assets/player_dei.png").convert_alpha()
+main_menu = pygame.image.load("assets/mainmenu.png").convert_alpha()
+tutorial_img = pygame.image.load("assets/tutorial.png").convert_alpha()
 
 
 #player
@@ -51,20 +56,21 @@ coin_img = pygame.image.load("assets/coin_2d.png").convert_alpha()
 book_img = pygame.image.load("assets/book2_2d.png").convert_alpha()
 cone_img = pygame.image.load("assets/cone2_2d.png").convert_alpha()
 rock_img = pygame.image.load("assets/rock2_2d.png").convert_alpha()
-popbus_img = pygame.image.load("assets/big_popbus.png").convert_alpha()
+popbus_img = pygame.image.load("assets/big_popbus2.png").convert_alpha()
 work_img = pygame.image.load("assets/work_2d.png").convert_alpha()
 gradeA_img = pygame.image.load("assets/grade_A.png").convert_alpha()
 gradeF_img = pygame.image.load("assets/grade_F.png").convert_alpha()
+exam_img = pygame.image.load("assets/exam_2d.png").convert_alpha()
 
 
 nerd_img = pygame.image.load("assets/nerd.png").convert_alpha()
-speed_img = pygame.image.load("assets/book.png").convert_alpha()
+speed_img = pygame.image.load("assets/run.png").convert_alpha()
 shield_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 x2icon_img = pygame.image.load("assets/icon.png").convert_alpha()
 speedicon_img = pygame.image.load("assets/speedicon.png").convert_alpha()
 shieldicon_img = pygame.image.load("assets/turtle_shield.png").convert_alpha()
 
-collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img, gradeA_img]
+collectible_images = [coin_img, book_img, nerd_img, work_img, speed_img, shield_img, gradeA_img, exam_img]
 obstacle_images = [cone_img, rock_img , popbus_img , gradeF_img]
 
 #fonts
@@ -73,6 +79,7 @@ scoreFont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 GOfont = pygame.font.Font("assets/ByteBounce.ttf", 60)
 title_font = pygame.font.Font("assets/ByteBounce.ttf", 80)
 ThaiFont = pygame.font.Font("assets/TAGameboy-Regular.ttf", 45)
+pixel_font = pygame.font.Font("assets/PixelifySans-VariableFont_wght.ttf", 60)
 
 #sfx
 ding_sfx = pygame.mixer.Sound("SFX/ding2.mp3")
@@ -90,15 +97,17 @@ class Button:
 
     def draw(self, surface):
         action = False
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] and not self.clicked:
+        mouse_pos = pygame.mouse.get_pos()
+        offset_y = 15 * math.sin(2 * math.pi * 0.5 * (pygame.time.get_ticks() / 1000.0)) #moving button
+        offset_rect = self.rect.move(0, offset_y)
+        if offset_rect.collidepoint(mouse_pos): #check if cursor is on button or not . collide point
+            if pygame.mouse.get_pressed()[0] and not self.clicked: #left click
                 self.clicked = True
                 action = True
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
 
-        surface.blit(self.image, self.rect)
+        surface.blit(self.image, offset_rect)
         return action
 
 #draw perspective road
@@ -117,18 +126,17 @@ def draw_road(surface, scroll):
 
 #main menu
 def show_main_menu():
-    start_button = Button((SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60), play_button_img)
+    #asset is too big . scale down
+    scaled_button = pygame.transform.scale(play_button_img, (int(play_button_img.get_width() * 0.8), int(play_button_img.get_height() * 0.8)))
+    start_button = Button((SCREEN_WIDTH//2, 560), scaled_button)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-        #TITLE SCREEN (Change)
-        screen.fill(SKY_BLUE)
-        title_text = title_font.render("Run for Your GPA", True, WHITE)
-        subtitle_text = font.render("Click Start to begin", True, WHITE)
-        screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 3 - 70))
-        screen.blit(subtitle_text, (SCREEN_WIDTH // 2 - subtitle_text.get_width() // 2, SCREEN_HEIGHT // 3 + 20))
+
+        #TITLE SCREEN make it fit
+        screen.blit(cover_game_img,(0,0))
 
         #show button
         if start_button.draw(screen):
@@ -138,7 +146,9 @@ def show_main_menu():
         clock.tick(FPS)
 
 def show_end(score): #end screen
-    retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60), play_button_img)
+    retry_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200), play_button_img)
+    scaled_mm_button = pygame.transform.scale(main_menu, (int(main_menu.get_width() * 0.2), int(main_menu.get_height() * 0.2)))
+    main_menu_button = Button((SCREEN_WIDTH // 2-350, SCREEN_HEIGHT // 2 + 200), scaled_mm_button )
     lose_sfx.play()
     while True:
         for event in pygame.event.get():
@@ -147,11 +157,33 @@ def show_end(score): #end screen
 
         screen.fill(BLACK)
         score_display = scoreFont.render(f"Final Score: {score}", True, WHITE)
-        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 150))
+        screen.blit(score_display, ((SCREEN_WIDTH // 2) - 150, (SCREEN_HEIGHT // 2) - 300))
         retry_text = title_font.render("TRY AGAIN?",True,WHITE)
-        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-100))
+        screen.blit(retry_text, (SCREEN_WIDTH//2-160, SCREEN_HEIGHT//2-250))
+        player_dei_scaled = pygame.transform.scale(player_dei_img, (300, 300)) #scale assets
+        player_rect = player_dei_scaled.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2)) #get pos
+        screen.blit(player_dei_scaled, player_rect)
 
         if retry_button.draw(screen):
+            return True
+        
+        if main_menu_button.draw(screen):
+            menu_result = show_main_menu()
+            return menu_result
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+#def show_tutorial():
+    Game_button = Button((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200), play_button_img)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+        
+        screen.blit(tutorial_img,(0,0))
+
+        if Game_button.draw(screen):
             return True
 
         pygame.display.flip()
@@ -237,6 +269,9 @@ def run_game():
                 player.player_speed = 5
                 speed_active = False
 
+        good_text = font.render("+SCORE",True,GREEN)
+        bad_text = font.render("-SCORE",True,RED)
+
         #collectables
         for collect in pygame.sprite.spritecollide(player, collectibles, True):
             ding_sfx.play()
@@ -268,8 +303,9 @@ def run_game():
                 for other in list(collectibles):
                     if getattr(other, "image_original", None) == shield_img:
                         other.kill()
-
+            
             health = min(100, health + 5) #player health
+            screen.blit(good_text,(SCREEN_WIDTH//2+350,20))
 
         #obstacles
         for obs in pygame.sprite.spritecollide(player, obstacles, True):
@@ -282,6 +318,7 @@ def run_game():
             else:
                 score = max(0, score - 1) #prevent score negative
                 health -= 15 
+            screen.blit(bad_text,(SCREEN_WIDTH//2+350,20))
 
         collectibles.draw(screen)
         obstacles.draw(screen)
@@ -347,8 +384,11 @@ def main():
             break
 
         continue_running = run_game()
+        # If False, user quit - exit program
+        # If True, user wants to retry - loop back to show_main_menu
         if not continue_running:
             break
+        # If continue_running is True, loop back to show_main_menu
 
     pygame.quit()
     sys.exit()
